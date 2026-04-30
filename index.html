@@ -833,7 +833,6 @@ function cancelPayment() {
 
 /* ── On Payment Success ── */
 async function onPaymentSuccess(firstName, lastName, email, mpesaCode, org, source) {
-  // Send confirmation email via EmailJS
   const now = new Date().toLocaleString('en-KE',{ timeZone:'Africa/Nairobi', dateStyle:'full', timeStyle:'short' });
   const params = {
     from_name:  `${firstName} ${lastName}`,
@@ -853,29 +852,25 @@ async function onPaymentSuccess(firstName, lastName, email, mpesaCode, org, sour
     console.warn('Email send failed but payment succeeded:', err);
   }
 
-  // Update counter
   rsvpCount++;
   localStorage.setItem('rsvpCount', rsvpCount);
   updateCounter();
 
-  // Show success
   document.getElementById('successName').textContent = firstName;
   document.getElementById('successMpesa').textContent = mpesaCode ? `M-Pesa Code: ${mpesaCode}` : 'Payment confirmed ✓';
   document.getElementById('successOverlay').classList.add('show');
-  document.getElementById('rsvpForm').reset();
-  selectedType = null;
-  document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('selectedAmountDisplay').classList.remove('show');
-  document.getElementById('btnText').textContent = 'Select a payment option above';
-}
-  const overlay = document.getElementById('successOverlay');
-  overlay.classList.add('show');
-  document.body.style.overflow = 'hidden'; // keep locked until user dismisses
+  document.body.style.overflow = 'hidden';
 }
 
 function closeSuccess() {
   document.getElementById('successOverlay').classList.remove('show');
   document.body.style.overflow = '';
+
+  document.getElementById('rsvpForm').reset();
+  selectedType = null;
+  document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('selectedAmountDisplay').classList.remove('show');
+  document.getElementById('btnText').textContent = 'Select a payment option above';
 }
 
 function showError(msg) {
