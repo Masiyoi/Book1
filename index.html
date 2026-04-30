@@ -868,6 +868,10 @@ async function onPaymentSuccess(firstName, lastName, email, mpesaCode, org, sour
   document.getElementById('selectedAmountDisplay').classList.remove('show');
   document.getElementById('btnText').textContent = 'Select a payment option above';
 }
+  const overlay = document.getElementById('successOverlay');
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden'; // keep locked until user dismisses
+}
 
 function closeSuccess() {
   document.getElementById('successOverlay').classList.remove('show');
