@@ -586,13 +586,38 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
   </div>
   
   <!-- Manual Paybill Instructions -->
-  <div style="background: rgba(200,149,42,0.08); border: 1px solid rgba(200,149,42,0.2); padding: 24px; margin: 10px 0; text-align: center;">
+  <div style="background: rgba(200,149,42,0.08); border: 1px solid rgba(200,149,42,0.2); padding: 24px; margin: 10px 0; text-align: center; border-radius: 8px;">
+    
+    <!-- Official M-Pesa Logo -->
+    <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" alt="M-Pesa Logo" style="height: 45px; margin-bottom: 16px;">
+    
     <p style="font-family: 'Cinzel', serif; color: var(--gold-light); font-size: 1.1rem; margin-bottom: 12px; letter-spacing: 2px;">Payment Instructions</p>
-    <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7;">
-      Please pay <strong>KES 500</strong> (Entry) or <strong>KES 2,000</strong> (Book + Entry) via M-Pesa to secure your seat.<br><br>
-      Paybill Number: <strong style="color: var(--white); font-size: 1.1rem;">123456</strong><br>
-      Account Number: <strong style="color: var(--white);">Your First Name</strong>
+    <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 18px;">
+      Please pay <strong>KES 500</strong> (Entry) or <strong>KES 2,000</strong> (Book + Entry) via M-Pesa to secure your seat.
     </p>
+
+    <!-- Copyable Numbers Box -->
+    <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 6px; display: inline-block; text-align: left; border: 1px solid rgba(255,255,255,0.05);">
+      
+      <!-- Paybill Row -->
+      <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Paybill Number:</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <strong id="paybill-number" style="color: var(--white); font-size: 1.2rem; letter-spacing: 2px;">480587</strong>
+          <button type="button" onclick="copyText('paybill-number', this)" style="background: var(--gold); border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; color: var(--dark); transition: background 0.3s;">COPY</button>
+        </div>
+      </div>
+      
+      <!-- Account Row -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Account Number:</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <strong id="account-number" style="color: var(--white); font-size: 1.2rem; letter-spacing: 2px;">0542855</strong>
+          <button type="button" onclick="copyText('account-number', this)" style="background: var(--gold); border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; color: var(--dark); transition: background 0.3s;">COPY</button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <button type="submit" class="btn-pay" id="submitBtn">Complete RSVP</button>
@@ -744,6 +769,31 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
   function closeSuccess() {
     document.getElementById('successOverlay').classList.remove('show');
     document.body.style.overflow = '';
+  }
+  /* ── Click to Copy Function ── */
+  function copyText(elementId, btnElement) {
+    const textToCopy = document.getElementById(elementId).innerText;
+    
+    // Write text to the user's clipboard
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      // Visual feedback: Change button to say "COPIED!" and turn green
+      const originalText = btnElement.innerText;
+      const originalBg = btnElement.style.background;
+      const originalColor = btnElement.style.color;
+
+      btnElement.innerText = 'COPIED!';
+      btnElement.style.background = '#3AAA6A'; // Using your var(--green-light) hex
+      btnElement.style.color = '#fff';
+
+      // Revert back after 2 seconds
+      setTimeout(() => {
+        btnElement.innerText = originalText;
+        btnElement.style.background = originalBg;
+        btnElement.style.color = originalColor;
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
   }
 </script>
 </body>
