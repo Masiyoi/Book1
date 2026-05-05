@@ -574,31 +574,8 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
     <span></span><span></span><span></span><span></span><span></span>
   </div>
 
-  <!-- PRICING OPTIONS -->
-  <div class="pricing-cards">
-    <div class="price-card" id="card-entry" onclick="selectPayment('entry')">
-      <div class="price-icon">🎟️</div>
-      <div class="price-label">Entry Only</div>
-      <div class="price-amount"><span>KES </span>500</div>
-      <div class="price-desc">Gate fee · Attend the launch event</div>
-    </div>
-    <div class="price-card" id="card-book" onclick="selectPayment('book')">
-      <div class="price-icon">📚</div>
-      <div class="price-label">Book Only</div>
-      <div class="price-amount"><span>KES </span>2,000</div>
-      <div class="price-desc">Pre-order your signed copy of Beneath The Acacia</div>
-    </div>
-    <div class="price-card price-combo" id="card-combo" onclick="selectPayment('combo')">
-      <div class="price-icon">✨</div>
-      <div class="price-label">Entry + Book</div>
-      <div class="price-amount"><span>KES </span>2,000</div>
-      <div class="price-desc">Best value · Entry fee waived when you buy the book</div>
-    </div>
-  </div>
 
-  <div class="selected-amount" id="selectedAmountDisplay"></div>
-
-  <form class="reg-form">
+  <form class="reg-form" id="rsvpForm">
   <div class="form-row">
     <input type="text" name="firstName" class="f-input" placeholder="First Name" required>
     <input type="text" name="lastName" class="f-input" placeholder="Last Name" required>
@@ -608,9 +585,18 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
     <input type="tel" name="phone" class="f-input" placeholder="Phone (e.g., 0712345678)" required>
   </div>
   
-  <!-- Changed from "Pay" to "Complete RSVP" -->
-  <button type="submit" class="btn-pay">Complete RSVP</button>
-  <p class="form-note">You will receive an SMS with the Paybill instructions instantly.</p>
+  <!-- Manual Paybill Instructions -->
+  <div style="background: rgba(200,149,42,0.08); border: 1px solid rgba(200,149,42,0.2); padding: 24px; margin: 10px 0; text-align: center;">
+    <p style="font-family: 'Cinzel', serif; color: var(--gold-light); font-size: 1.1rem; margin-bottom: 12px; letter-spacing: 2px;">Payment Instructions</p>
+    <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.7;">
+      Please pay <strong>KES 500</strong> (Entry) or <strong>KES 2,000</strong> (Book + Entry) via M-Pesa to secure your seat.<br><br>
+      Paybill Number: <strong style="color: var(--white); font-size: 1.1rem;">123456</strong><br>
+      Account Number: <strong style="color: var(--white);">Your First Name</strong>
+    </p>
+  </div>
+
+  <button type="submit" class="btn-pay" id="submitBtn">Complete RSVP</button>
+  <p class="form-note">You will receive a confirmation email with these payment instructions.</p>
 </form>
 </section>
 
@@ -649,15 +635,25 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
 <div class="success-overlay" id="successOverlay">
   <div class="success-box">
     <span class="success-icon">✦</span>
-    <h2>You're Confirmed!</h2>
-    <p>Thank you, <strong class="success-name" id="successName">Guest</strong>! Your payment was received and your place is secured.</p>
-    <div class="success-mpesa" id="successMpesa">Check your SMS for Payment Instructions</div>
+    <h2>RSVP Received!</h2>
+    <p>Thank you, <strong class="success-name" id="successName">Guest</strong>! We have successfully received your details.</p>
+    
+    <!-- Updated instruction box to match the Email workflow -->
+    <div class="success-mpesa" id="successMpesa" style="background: rgba(200,149,42,0.15); border-color: rgba(200,149,42,0.3); color: var(--gold-light);">
+      Check Your Inbox for Payment Steps
+    </div>
+    
     <div class="success-details">
       <div class="success-detail"><span class="icon">📅</span><span class="lbl">Date</span><span class="val">12 June 2026</span></div>
-      <div class="success-detail"><span class="icon">📍</span><span class="lbl">Venue</span><span class="val">Esidai Hall, Kitengela</span></div>
+      <div class="success-detail"><span class="icon">📍</span><span class="lbl">Venue</span><span class="val">Kaputei Safari Hotel</span></div>
       <div class="success-detail"><span class="icon">🕙</span><span class="lbl">Time</span><span class="val">10:00 AM EAT</span></div>
     </div>
-    <p style="font-size:0.9rem;margin-bottom:28px;">A confirmation email has been sent to your inbox. Please keep your M-Pesa receipt as your entry ticket.</p>
+    
+    <!-- Updated closing text -->
+    <p style="font-size:0.9rem;margin-bottom:28px; line-height: 1.6;">
+      An automated email containing the <strong>M-Pesa Paybill instructions</strong> has just been sent to you. Please complete your payment to finalize your booking!
+    </p>
+    
     <button class="btn-gold" onclick="closeSuccess()" style="font-size:0.65rem;letter-spacing:3px;border:none;cursor:pointer;">
       Back to Page
     </button>
@@ -670,7 +666,6 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
   <p id="errMsg">Something went wrong. Please try again.</p>
 </div>
 
-<!-- ──── SCRIPTS ──── -->
 <!-- ──── SCRIPTS ──── -->
 <script>
   /* ── Countdown ── */
@@ -685,19 +680,6 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
   }
   tick(); setInterval(tick, 1000);
 
-  /* ── Payment Selection ── */
-  const LABELS = { entry: 'Entry — KES 500', book: 'Book Pre-order — KES 2,000', combo: 'Entry + Book — KES 2,000' };
-  let selectedType = null;
-
-  function selectPayment(type) {
-    selectedType = type;
-    document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
-    document.getElementById('card-' + type).classList.add('selected');
-    const display = document.getElementById('selectedAmountDisplay');
-    display.textContent = '→ ' + LABELS[type];
-    display.classList.add('show');
-  }
-
   /* ── Scroll fade-in ── */
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
@@ -711,89 +693,46 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
     io.observe(el);
   });
 
-  /* ── Form Submission & SMS API Logic ── */
+  /* ── Form Submission via EmailJS ── */
   document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('.reg-form');
-    const submitBtn = document.querySelector('.btn-pay');
-    const successOverlay = document.querySelector('.success-overlay');
-    const errorToast = document.querySelector('.err-toast');
+    const form = document.getElementById('rsvpForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successOverlay = document.getElementById('successOverlay');
+    const errorToast = document.getElementById('errToast');
     
     if (form) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault(); 
 
-        // 1. Ensure a ticket is selected
-        if (!selectedType) {
-          const t = document.getElementById('errToast');
-          document.getElementById('errMsg').textContent = 'Please select a ticket option above first.';
-          t.classList.add('show');
-          setTimeout(() => t.classList.remove('show'), 5000);
-          return;
-        }
-
-        // 2. Extract data from the form inputs
         const formData = new FormData(form);
         const firstName = formData.get('firstName');
-        const lastName = formData.get('lastName');
-        const email = formData.get('email');
-        const phone = formData.get('phone');
-        
-        // Determine item type based on selection
-        const itemType = (selectedType === 'combo' || selectedType === 'book') ? 'book' : 'ticket';
 
-        // 3. Update the UI to a loading state
         const originalBtnText = submitBtn.innerHTML;
-        submitBtn.innerHTML = 'Processing...';
+        submitBtn.innerHTML = 'Sending RSVP...';
         submitBtn.disabled = true;
 
         try {
-          // 4. Send the payload to your Render backend
-          const response = await fetch(`${API_BASE}/register`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              firstName,
-              lastName,
-              email,
-              phone,
-              itemType
-            })
-          });
+          // Send form directly to EmailJS
+          await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, form);
 
-          const data = await response.json();
-
-          if (response.ok && data.success) {
-            // 5. SUCCESS! Personalize the modal and show it
-            const successNameSpan = document.querySelector('.success-name');
-            if (successNameSpan) successNameSpan.textContent = firstName;
-            
-            successOverlay.classList.add('show');
-            document.body.style.overflow = 'hidden'; // prevent scrolling behind modal
-            form.reset(); 
-            
-            // Reset ticket selection
-            selectedType = null;
-            document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
-            document.getElementById('selectedAmountDisplay').classList.remove('show');
-            
-          } else {
-            throw new Error(data.error || 'Something went wrong. Please try again.');
-          }
+          // SUCCESS
+          const successNameSpan = document.getElementById('successName');
+          if (successNameSpan) successNameSpan.textContent = firstName;
+          
+          successOverlay.classList.add('show');
+          document.body.style.overflow = 'hidden'; 
+          form.reset(); 
 
         } catch (error) {
-          // 6. ERROR! Show your custom error toast
-          console.error('Registration Error:', error);
-          
+          // ERROR
+          console.error('EmailJS Error:', error);
           const errorMsgElement = document.getElementById('errMsg');
-          if (errorMsgElement) errorMsgElement.textContent = error.message;
+          if (errorMsgElement) errorMsgElement.textContent = 'Failed to send RSVP. Please try again.';
           
           errorToast.classList.add('show');
           setTimeout(() => { errorToast.classList.remove('show'); }, 5000);
 
         } finally {
-          // 7. Restore the button
           submitBtn.innerHTML = originalBtnText;
           submitBtn.disabled = false;
         }
