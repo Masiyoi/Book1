@@ -598,30 +598,20 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
 
   <div class="selected-amount" id="selectedAmountDisplay"></div>
 
-  <form class="reg-form" id="rsvpForm" onsubmit="handlePay(event)" novalidate>
-    <div class="form-row">
-      <input type="text" class="f-input" id="firstName" placeholder="First Name *" required>
-      <input type="text" class="f-input" id="lastName"  placeholder="Last Name *"  required>
-    </div>
-    <input type="email" class="f-input" id="guestEmail" placeholder="Email Address *" required>
-    <input type="tel"   class="f-input" id="guestPhone" placeholder="M-Pesa Phone Number * (07XXXXXXXX)" required>
-    <input type="text"  class="f-input" id="guestOrg"   placeholder="Organisation / Community (optional)">
-    <select class="f-select" id="guestSource">
-      <option value="" disabled selected>How did you hear about this event?</option>
-      <option>Social Media</option>
-      <option>Word of Mouth</option>
-      <option>Naresho Youth Initiative</option>
-      <option>Elong'o Publishers</option>
-      <option>Community / Church</option>
-      <option>Newspaper / Radio</option>
-      <option>Other</option>
-    </select>
-    <button type="submit" class="btn-pay" id="submitBtn">
-      <span class="mpesa-logo">M-PESA</span>
-      <span id="btnText">Select a payment option above</span>
-    </button>
-    <p class="form-note">* An STK Push will be sent to your M-Pesa phone. Enter your PIN to confirm. You will receive a confirmation email after payment.</p>
-  </form>
+  <form class="reg-form">
+  <div class="form-row">
+    <input type="text" name="firstName" class="f-input" placeholder="First Name" required>
+    <input type="text" name="lastName" class="f-input" placeholder="Last Name" required>
+  </div>
+  <div class="form-row">
+    <input type="email" name="email" class="f-input" placeholder="Email Address" required>
+    <input type="tel" name="phone" class="f-input" placeholder="Phone (e.g., 0712345678)" required>
+  </div>
+  
+  <!-- Changed from "Pay" to "Complete RSVP" -->
+  <button type="submit" class="btn-pay">Complete RSVP</button>
+  <p class="form-note">You will receive an SMS with the Paybill instructions instantly.</p>
+</form>
 </section>
 
 <!-- ──── FOOTER ──── -->
@@ -655,31 +645,13 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
   <p class="footer-copy">© 2026 Reuben S. Nkinina · Elong'o Publishers · Kaputei Safari Hotel, Kitengela · 12 June 2026</p>
 </footer>
 
-<!-- ──── PAYMENT WAITING MODAL ──── -->
-<div class="pay-modal" id="payModal">
-  <div class="pay-box">
-    <div class="pay-spinner"></div>
-    <h3>Check Your Phone</h3>
-    <p>An M-Pesa prompt has been sent to:</p>
-    <div class="pay-phone-display" id="modalPhone">07XX XXX XXX</div>
-    <div class="pay-steps">
-      <div class="pay-step"><div class="pay-step-num">1</div><span>A pop-up will appear on your phone</span></div>
-      <div class="pay-step"><div class="pay-step-num">2</div><span>Enter your M-Pesa PIN to confirm</span></div>
-      <div class="pay-step"><div class="pay-step-num">3</div><span>Wait for confirmation — do not close this page</span></div>
-    </div>
-    <div class="pay-timer" id="payTimer">2:00</div>
-    <p style="font-size:0.85rem;">Waiting for payment confirmation…</p>
-    <button class="pay-cancel" onclick="cancelPayment()">Cancel &amp; Go Back</button>
-  </div>
-</div>
-
 <!-- ──── SUCCESS OVERLAY ──── -->
 <div class="success-overlay" id="successOverlay">
   <div class="success-box">
     <span class="success-icon">✦</span>
     <h2>You're Confirmed!</h2>
     <p>Thank you, <strong class="success-name" id="successName">Guest</strong>! Your payment was received and your place is secured.</p>
-    <div class="success-mpesa" id="successMpesa">M-Pesa Code: ––</div>
+    <div class="success-mpesa" id="successMpesa">Check your SMS for Payment Instructions</div>
     <div class="success-details">
       <div class="success-detail"><span class="icon">📅</span><span class="lbl">Date</span><span class="val">12 June 2026</span></div>
       <div class="success-detail"><span class="icon">📍</span><span class="lbl">Venue</span><span class="val">Esidai Hall, Kitengela</span></div>
@@ -699,198 +671,141 @@ footer{padding:64px 56px 44px;background:#070F14;text-align:center;border-top:1p
 </div>
 
 <!-- ──── SCRIPTS ──── -->
+<!-- ──── SCRIPTS ──── -->
 <script>
-/* ── Countdown ── */
-function tick(){
-  const target = new Date('2026-06-12T10:00:00+03:00');
-  const diff = target - new Date();
-  if(diff <= 0) return;
-  document.getElementById('cd-days').textContent  = String(Math.floor(diff/864e5)).padStart(3,'0');
-  document.getElementById('cd-hours').textContent = String(Math.floor((diff%864e5)/36e5)).padStart(2,'0');
-  document.getElementById('cd-mins').textContent  = String(Math.floor((diff%36e5)/6e4)).padStart(2,'0');
-  document.getElementById('cd-secs').textContent  = String(Math.floor((diff%6e4)/1e3)).padStart(2,'0');
-}
-tick(); setInterval(tick, 1000);
-
-/* ── Payment Selection ── */
-const PRICES = { entry: 500, book: 2000, combo: 2000 };
-const LABELS = { entry: 'Entry — KES 500', book: 'Book Pre-order — KES 2,000', combo: 'Entry + Book — KES 2,000' };
-let selectedType = null;
-let pollInterval = null;
-let timerInterval = null;
-
-function selectPayment(type) {
-  selectedType = type;
-  document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('card-' + type).classList.add('selected');
-  const display = document.getElementById('selectedAmountDisplay');
-  display.textContent = '→ ' + LABELS[type];
-  display.classList.add('show');
-  document.getElementById('btnText').textContent = 'Pay ' + LABELS[type] + ' via M-Pesa';
-}
-
-/* ── Handle Pay ── */
-async function handlePay(e) {
-  e.preventDefault();
-  if (!selectedType) { showError('Please select a payment option (Entry, Book, or Combo).'); return; }
-
-  const btn       = document.getElementById('submitBtn');
-  const firstName = document.getElementById('firstName').value.trim();
-  const lastName  = document.getElementById('lastName').value.trim();
-  const email     = document.getElementById('guestEmail').value.trim();
-  const phone     = document.getElementById('guestPhone').value.trim();
-  const org       = document.getElementById('guestOrg').value.trim();
-  const source    = document.getElementById('guestSource').value;
-
-  if (!firstName || !lastName || !email || !phone) {
-    showError('Please fill in all required fields.'); return;
+  /* ── Countdown ── */
+  function tick(){
+    const target = new Date('2026-06-12T10:00:00+03:00');
+    const diff = target - new Date();
+    if(diff <= 0) return;
+    document.getElementById('cd-days').textContent  = String(Math.floor(diff/864e5)).padStart(3,'0');
+    document.getElementById('cd-hours').textContent = String(Math.floor((diff%864e5)/36e5)).padStart(2,'0');
+    document.getElementById('cd-mins').textContent  = String(Math.floor((diff%36e5)/6e4)).padStart(2,'0');
+    document.getElementById('cd-secs').textContent  = String(Math.floor((diff%6e4)/1e3)).padStart(2,'0');
   }
-  if (!email.includes('@')) { showError('Please enter a valid email address.'); return; }
-  if (!/^(07|2547|\+2547)\d{8}$/.test(phone.replace(/\s/g,''))) {
-    showError('Please enter a valid Safaricom number (07XXXXXXXX).'); return;
+  tick(); setInterval(tick, 1000);
+
+  /* ── Payment Selection ── */
+  const LABELS = { entry: 'Entry — KES 500', book: 'Book Pre-order — KES 2,000', combo: 'Entry + Book — KES 2,000' };
+  let selectedType = null;
+
+  function selectPayment(type) {
+    selectedType = type;
+    document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('card-' + type).classList.add('selected');
+    const display = document.getElementById('selectedAmountDisplay');
+    display.textContent = '→ ' + LABELS[type];
+    display.classList.add('show');
   }
 
-  btn.disabled = true;
-  document.getElementById('btnText').textContent = 'Initiating payment…';
-
-  try {
-    const res = await fetch(`${API_BASE}/mpesa/stkpush`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone, firstName, lastName, email,
-        amount: PRICES[selectedType],
-        itemType: selectedType,
-        org: org || 'Not provided',
-        source: source || 'Not specified',
-      })
+  /* ── Scroll fade-in ── */
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
     });
-
-    const data = await res.json();
-
-    if (data.success) {
-      showPayModal(phone, data.checkoutRequestId, firstName, lastName, email, org, source);
-    } else {
-      showError(data.error || 'Payment initiation failed. Please try again.');
-    }
-  } catch(err) {
-    console.error(err);
-    showError('Could not connect to payment server. Please try again or contact nareshoyouth@gmail.com');
-  } finally {
-    btn.disabled = false;
-    document.getElementById('btnText').textContent = 'Pay ' + LABELS[selectedType] + ' via M-Pesa';
-  }
-}
-
-/* ── Show Payment Modal & Poll ── */
-function showPayModal(phone, checkoutId, firstName, lastName, email, org, source) {
-  document.getElementById('modalPhone').textContent = phone;
-  document.getElementById('payModal').classList.add('show');
-  document.body.style.overflow = 'hidden';
-
-  // Countdown timer (2 minutes)
-  let seconds = 120;
-  const timerEl = document.getElementById('payTimer');
-  timerInterval = setInterval(() => {
-    seconds--;
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    timerEl.textContent = `${m}:${String(s).padStart(2,'0')}`;
-    if (seconds <= 0) { clearInterval(timerInterval); cancelPayment(); }
-  }, 1000);
-
-  // Poll backend every 3 seconds
-  pollInterval = setInterval(async () => {
-    try {
-      const res  = await fetch(`${API_BASE}/mpesa/status/${checkoutId}`);
-      const data = await res.json();
-
-      if (data.status === 'success') {
-        clearInterval(pollInterval);
-        clearInterval(timerInterval);
-        closePayModal();
-        onPaymentSuccess(firstName, lastName, email, data.mpesaCode, org, source);
-      } else if (data.status === 'failed') {
-        clearInterval(pollInterval);
-        clearInterval(timerInterval);
-        closePayModal();
-        showError('Payment was not completed. Please try again.');
-      }
-    } catch(err) { /* network hiccup — keep polling */ }
-  }, 3000);
-}
-
-function closePayModal() {
-  document.getElementById('payModal').classList.remove('show');
-  document.body.style.overflow = '';
-}
-
-function cancelPayment() {
-  clearInterval(pollInterval);
-  clearInterval(timerInterval);
-  closePayModal();
-}
-
-/* ── On Payment Success ── */
-async function onPaymentSuccess(firstName, lastName, email, mpesaCode, org, source) {
-  const now = new Date().toLocaleString('en-KE',{ timeZone:'Africa/Nairobi', dateStyle:'full', timeStyle:'short' });
-  const params = {
-    from_name:  `${firstName} ${lastName}`,
-    from_email: email,
-    phone:      document.getElementById('guestPhone').value.trim(),
-    org:        org || 'Not provided',
-    source:     source || 'Not specified',
-    time:       now,
-    reply_to:   email,
-    mpesa_code: mpesaCode || 'N/A',
-    item_type:  LABELS[selectedType] || selectedType,
-  };
-
-  try {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
-  } catch(err) {
-    console.warn('Email send failed but payment succeeded:', err);
-  }
-
-  rsvpCount++;
-  localStorage.setItem('rsvpCount', rsvpCount);
-  updateCounter();
-
-  document.getElementById('successName').textContent = firstName;
-  document.getElementById('successMpesa').textContent = mpesaCode ? `M-Pesa Code: ${mpesaCode}` : 'Payment confirmed ✓';
-  document.getElementById('successOverlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeSuccess() {
-  document.getElementById('successOverlay').classList.remove('show');
-  document.body.style.overflow = '';
-
-  document.getElementById('rsvpForm').reset();
-  selectedType = null;
-  document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('selectedAmountDisplay').classList.remove('show');
-  document.getElementById('btnText').textContent = 'Select a payment option above';
-}
-
-function showError(msg) {
-  const t = document.getElementById('errToast');
-  document.getElementById('errMsg').textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 7000);
-}
-
-/* ── Scroll fade-in ── */
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+  }, { threshold: 0.08 });
+  
+  document.querySelectorAll('.ev-item,.prog-item,.cd-block,.author-card,.rsvp-counter,.price-card').forEach(el => {
+    el.style.opacity='0'; el.style.transform='translateY(18px)';
+    el.style.transition='opacity 0.65s ease, transform 0.65s ease';
+    io.observe(el);
   });
-}, { threshold: 0.08 });
-document.querySelectorAll('.ev-item,.prog-item,.cd-block,.author-card,.rsvp-counter,.price-card').forEach(el => {
-  el.style.opacity='0'; el.style.transform='translateY(18px)';
-  el.style.transition='opacity 0.65s ease, transform 0.65s ease';
-  io.observe(el);
-});
+
+  /* ── Form Submission & SMS API Logic ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('.reg-form');
+    const submitBtn = document.querySelector('.btn-pay');
+    const successOverlay = document.querySelector('.success-overlay');
+    const errorToast = document.querySelector('.err-toast');
+    
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault(); 
+
+        // 1. Ensure a ticket is selected
+        if (!selectedType) {
+          const t = document.getElementById('errToast');
+          document.getElementById('errMsg').textContent = 'Please select a ticket option above first.';
+          t.classList.add('show');
+          setTimeout(() => t.classList.remove('show'), 5000);
+          return;
+        }
+
+        // 2. Extract data from the form inputs
+        const formData = new FormData(form);
+        const firstName = formData.get('firstName');
+        const lastName = formData.get('lastName');
+        const email = formData.get('email');
+        const phone = formData.get('phone');
+        
+        // Determine item type based on selection
+        const itemType = (selectedType === 'combo' || selectedType === 'book') ? 'book' : 'ticket';
+
+        // 3. Update the UI to a loading state
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Processing...';
+        submitBtn.disabled = true;
+
+        try {
+          // 4. Send the payload to your Render backend
+          const response = await fetch(`${API_BASE}/register`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              firstName,
+              lastName,
+              email,
+              phone,
+              itemType
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // 5. SUCCESS! Personalize the modal and show it
+            const successNameSpan = document.querySelector('.success-name');
+            if (successNameSpan) successNameSpan.textContent = firstName;
+            
+            successOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden'; // prevent scrolling behind modal
+            form.reset(); 
+            
+            // Reset ticket selection
+            selectedType = null;
+            document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('selectedAmountDisplay').classList.remove('show');
+            
+          } else {
+            throw new Error(data.error || 'Something went wrong. Please try again.');
+          }
+
+        } catch (error) {
+          // 6. ERROR! Show your custom error toast
+          console.error('Registration Error:', error);
+          
+          const errorMsgElement = document.getElementById('errMsg');
+          if (errorMsgElement) errorMsgElement.textContent = error.message;
+          
+          errorToast.classList.add('show');
+          setTimeout(() => { errorToast.classList.remove('show'); }, 5000);
+
+        } finally {
+          // 7. Restore the button
+          submitBtn.innerHTML = originalBtnText;
+          submitBtn.disabled = false;
+        }
+      });
+    }
+  });
+
+  /* ── Close Success Modal ── */
+  function closeSuccess() {
+    document.getElementById('successOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
 </script>
 </body>
 </html>
